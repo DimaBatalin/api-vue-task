@@ -4,6 +4,8 @@ import CartModal from "@/Modals/CartModal.vue";
 import ProductModal from "@/Modals/ProductModal.vue";
 import { useCart } from "@/composables/useCart.js";
 import {API_KEY, API_BASE_URL} from "../config.js";
+import img from '@/assets/img.png';
+
 
 const {
   cart,
@@ -160,9 +162,6 @@ onMounted(() => {
       <span class="cart-badge" v-if="cartItemsCount > 0">{{ cartItemsCount }}</span>
     </div>
 
-
-
-
     <aside>
       <h3>Фильтры</h3>
 
@@ -209,7 +208,7 @@ onMounted(() => {
         <div v-for="product in products" :key="product.id" class="product-card">
           <div class="product-image" @click="openProduct(product.id)">
             <img alt="Нет картинки" :src="product.img" v-if="product.img">
-            <img v-else src="../public/img.png" alt=""/>
+            <img v-else :src="img" alt=""/>
           </div>
           <div class="product-info">
             <h3 @click="openProduct(product.id)" class="product-title">{{ product.name }}</h3>
