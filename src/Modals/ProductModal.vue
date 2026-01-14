@@ -1,86 +1,88 @@
-<script>
-// Импортируем из config.js
-import { API_BASE_URL, API_KEY } from '../../config';
+<script setup>
+import { ref, watch, computed } from 'vue'
+import { API_BASE_URL, API_KEY } from '../../config'
+import { useCart } from '@/composables/useCart.js'
 
-export default {
-  props: {
-    isViewModalProduct: Boolean,
-    id: {
-      type: Number,
-      required: true,
-      default: 0
-    },
-    category: String,
+const props = defineProps({
+  isViewModalProduct: Boolean,
+  id: {
+    type: Number,
+    default: null
   },
-  data() {
-    return {
-      productData: {},
-      isLoading: false,
-      error: null
+  category: String
+})
+
+const emit = defineEmits(['close-product-modal'])
+
+/* cart */
+const {
+  addToCart,
+  increaseQuantity,
+  decreaseQuantity,
+  getItem
+} = useCart()
+
+
+const cartItem = computed(() =>
+    getItem(productData.value?.id)
+)
+
+
+/* product */
+const productData = ref({})
+const isLoading = ref(false)
+const error = ref(null)
+
+const closeModal = () => {
+  emit('close-product-modal')
+}
+
+const loadProduct = async () => {
+  if (!props.id) return
+
+  isLoading.value = true
+  error.value = null
+
+  try {
+    const params = new URLSearchParams({
+      api_key: API_KEY
+    })
+
+    const response = await fetch(
+        `${API_BASE_URL}/product/${props.id}?${params.toString()}`,
+        { headers: { accept: 'application/json' } }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Ошибка загрузки: ${response.status}`)
     }
-  },
-  watch: {
-    // Наблюдаем за изменением id и загружаем товар
-    id: {
-      immediate: true,
-      handler(newId, oldId) {
-        if (newId && newId !== oldId) {
-          this.loadProduct();
-        }
-      }
-    },
-    // Наблюдаем за открытием модалки
-    isViewModalProduct: {
-      handler(isOpen) {
-        if (isOpen && this.id) {
-          this.loadProduct();
-        }
-      },
-      immediate: true
-    }
-  },
-  methods: {
-    closeModal() {
-      this.$emit('close-product-modal');
-    },
 
-    async loadProduct() {
-      if (!this.id) return;
-
-      this.isLoading = true;
-      this.error = null;
-
-      try {
-        const params = new URLSearchParams({
-          api_key: API_KEY,
-        });
-
-        const response = await fetch(`${API_BASE_URL}/product/${this.id}?${params.toString()}`, {
-          headers: { 'accept': 'application/json' }
-        });
-
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки: ${response.status}`);
-        }
-
-        const data = await response.json();
-        if (data) {
-          this.productData = data;
-        }
-      } catch (error) {
-        console.error('Ошибка загрузки товара:', error);
-        this.error = error.message;
-      } finally {
-        this.isLoading = false;
-      }
-    },
-
-    addToCart() {
-      this.$emit('add-to-cart', this.productData);
-    }
+    productData.value = await response.json()
+  } catch (e) {
+    error.value = e.message
+    console.error(e)
+  } finally {
+    isLoading.value = false
   }
 }
+
+/* watchers */
+watch(
+    () => props.id,
+    (newId) => {
+      if (newId) loadProduct()
+    },
+    { immediate: true }
+)
+
+watch(
+    () => props.isViewModalProduct,
+    (isOpen) => {
+      if (isOpen && props.id) loadProduct()
+    }
+)
 </script>
+
 
 <template>
   <!-- Модальное окно -->
@@ -136,14 +138,40 @@ export default {
             <p class="no-description">Описание отсутствует</p>
           </div>
 
-          <!-- Кнопка добавления в корзину -->
-          <button class="add-to-cart-btn" @click="addToCart">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="margin-right: 8px;">
-              <path d="M6 16C4.9 16 4.01 16.9 4.01 18C4.01 19.1 4.9 20 6 20C7.1 20 8 19.1 8 18C8 16.9 7.1 16 6 16ZM0 0V2H2L5.6 9.59L4.24 12.04C4.09 12.32 4 12.65 4 13C4 14.1 4.9 15 6 15H18V13H6.42C6.28 13 6.17 12.89 6.17 12.75L6.2 12.63L7.1 11H14.55C15.3 11 15.96 10.58 16.3 9.97L19.88 3.48C19.96 3.34 20 3.17 20 3C20 2.45 19.55 2 19 2H4.21L3.27 0H0ZM16 16C14.9 16 14.01 16.9 14.01 18C14.01 19.1 14.9 20 16 20C17.1 20 18 19.1 18 18C18 16.9 17.1 16 16 16Z"
-                    fill="white"/>
+          <button
+              v-if="!cartItem"
+              class="add-to-cart-btn"
+              @click="addToCart(productData)"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                  d="M6 16C4.9 16 4.01 16.9 4.01 18C4.01 19.1 4.9 20 6 20C7.1 20 8 19.1 8 18C8 16.9 7.1 16 6 16ZM0 0V2H2L5.6 9.59L4.24 12.04C4.09 12.32 4 12.65 4 13C4 14.1 4.9 15 6 15H18V13H6.42C6.28 13 6.17 12.89 6.17 12.75L6.2 12.63L7.1 11H14.55C15.3 11 15.96 10.58 16.3 9.97L19.88 3.48C19.96 3.34 20 3.17 20 3C20 2.45 19.55 2 19 2H4.21L3.27 0H0Z"
+                  fill="white"
+              />
             </svg>
             Добавить в корзину
           </button>
+
+          <!-- QUANTITY CONTROL -->
+          <div v-else class="quantity-control">
+            <button
+                class="qty-btn"
+                @click="decreaseQuantity(cartItem.id)"
+            >
+              −
+            </button>
+
+            <span class="qty-value">
+              {{ cartItem.quantity }}
+            </span>
+
+            <button
+                class="qty-btn"
+                @click="increaseQuantity(cartItem.id)"
+            >
+              +
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -151,7 +179,42 @@ export default {
 </template>
 
 <style scoped>
-/* Затемненный фон */
+.quantity-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 12px 20px;
+  margin-top: auto;
+}
+
+.qty-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: #2e7d32;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qty-btn:hover {
+  background: #1b5e20;
+}
+
+.qty-value {
+  min-width: 40px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;

@@ -11,11 +11,14 @@ const {
   decreaseQuantity
 } = useCart();
 
-const props = defineProps({
-  isOpen: Boolean
-});
+defineProps({
+  isOpen: {
+    type: Boolean,
+    required: true
+  }
+})
 
-const emit = defineEmits(['close']);
+defineEmits(['close'])
 
 // Загрузка корзины из localStorage при инициализации
 function loadCartFromStorage() {
@@ -82,7 +85,7 @@ onMounted(() => {
 
 <template>
   <!-- Панель корзины -->
-  <div class="cart-panel" :class="{ 'cart-open': isOpen }" v-show="isOpen">
+  <div class="cart-panel" :class="{ 'cart-open': isOpen }">
     <div class="cart-header">
       <h3>Корзина ({{ cartItemsCount }})</h3>
       <button class="close-cart" @click="$emit('close')">×</button>
@@ -128,12 +131,12 @@ onMounted(() => {
     </div>
   </div>
 
-  <!-- Оверлей ВСЕГДА вне панели -->
+
   <div
       v-if="isOpen"
       class="cart-overlay"
       @click="$emit('close')"
-  ></div>
+  />
 </template>
 
 <style scoped>

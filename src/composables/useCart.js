@@ -24,8 +24,7 @@ function addToCart(product) {
     } else {
         cart.value.push({
             ...product,
-            quantity: 1,
-            addedAt: new Date().toISOString()
+            quantity: 1
         });
     }
     saveCart();
@@ -60,6 +59,10 @@ const cartTotal = computed(() =>
     cart.value.reduce((s, i) => s + i.price * i.quantity, 0)
 );
 
+function getItem(id) {
+    return cart.value.find(i => i.id === id);
+}
+
 export function useCart() {
     return {
         cart,
@@ -69,6 +72,7 @@ export function useCart() {
         increaseQuantity,
         decreaseQuantity,
         cartItemsCount,
-        cartTotal
+        cartTotal,
+        getItem,
     };
 }

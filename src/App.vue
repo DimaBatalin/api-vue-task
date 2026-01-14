@@ -14,6 +14,7 @@ const {
   loadCart
 } = useCart();
 
+
 // Состояние
 const current_page = ref(1);
 const products = ref([]);
@@ -114,7 +115,7 @@ async function openProduct(productId) {
 
 // Сброс фильтров
 function resetFilters() {
-  filters.category_id = null;
+  filters.category_id = 1;
   filters.price_min = null;
   filters.price_max = null;
   filters.rating_min = null;
@@ -129,6 +130,7 @@ watch(filters, () => {
 });
 
 onMounted(() => {
+  loadCart()
   loadCategories();
   loadProducts();
 });
@@ -138,7 +140,7 @@ onMounted(() => {
   <div class="container">
     <!-- Модальное окно товара -->
     <ProductModal
-        :category="categories.length ? categories[filters.category_id-1]?.name || filters.category_id : filters.category_id"
+        :category="categories.length ? categories[filters.category_id-1]?.name : String(filters.category_id)"
         :id="CurrentProductId"
         :is-view-modal-product="isViewModalProduct"
         @close-product-modal="isViewModalProduct=false"
@@ -146,12 +148,13 @@ onMounted(() => {
     />
 
     <CartModal
-        :is-open="isCartOpen"
+        :isOpen="isCartOpen"
+        v-if="isCartOpen"
         @close="isCartOpen = false"
     />
 
     <!-- Иконка корзины с количеством -->
-    <div class="cart-icon" @click="isCartOpen = !isCartOpen">
+    <div class="cart-icon" @click="isCartOpen = true" v-show="!isViewModalProduct">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path d="M6 2L3 6V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V6L18 2H6Z"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -322,214 +325,7 @@ onMounted(() => {
   font-weight: bold;
 }
 
-/* Панель корзины */
-.cart-panel {
-  position: fixed;
-  top: 0;
-  right: -400px;
-  width: 350px;
-  height: 100vh;
-  background: white;
-  box-shadow: -4px 0 15px rgba(0,0,0,0.1);
-  z-index: 1001;
-  transition: right 0.3s ease;
-  display: flex;
-  flex-direction: column;
-}
 
-.cart-open {
-  right: 0;
-}
-
-.cart-header {
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.close-cart {
-  background: none;
-  border: none;
-  font-size: 28px;
-  cursor: pointer;
-  color: #666;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-}
-
-.close-cart:hover {
-  background: #f5f5f5;
-}
-
-.cart-items {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-}
-
-.cart-item {
-  display: flex;
-  align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.cart-item:last-child {
-  border-bottom: none;
-}
-
-.cart-item-img {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-right: 15px;
-}
-
-.cart-item-info {
-  flex: 1;
-}
-
-.cart-item-info h4 {
-  margin: 0 0 5px 0;
-  font-size: 14px;
-}
-
-.cart-item-price {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
-}
-
-.cart-item-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.quantity-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid #ddd;
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
-  transition: all 0.2s;
-}
-
-.quantity-btn:hover {
-  background: #f0f0f0;
-}
-
-.quantity {
-  min-width: 20px;
-  text-align: center;
-}
-
-.remove-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  background: #ffebee;
-  color: #f44336;
-  cursor: pointer;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.remove-btn:hover {
-  background: #f44336;
-  color: white;
-}
-
-.empty-cart {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #999;
-}
-
-.cart-footer {
-  padding: 20px;
-  border-top: 1px solid #eee;
-}
-
-.cart-total {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.total-price {
-  color: #4CAF50;
-  font-size: 24px;
-}
-
-.clear-cart-btn {
-  width: 100%;
-  padding: 12px;
-  background: #ffebee;
-  color: #f44336;
-  border: 1px solid #ffcdd2;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 10px;
-  transition: all 0.2s;
-}
-
-.clear-cart-btn:hover {
-  background: #f44336;
-  color: white;
-}
-
-.checkout-btn {
-  width: 100%;
-  padding: 15px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  transition: all 0.2s;
-}
-
-.checkout-btn:hover {
-  background: #45a049;
-}
-
-/* Оверлей для корзины */
-.cart-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 1000;
-}
-
-/* Обновленные стили для карточек товаров */
 .product-card {
   width: 100%;
   border: 1px solid #ddd;
@@ -604,7 +400,6 @@ onMounted(() => {
   background: #45a049;
 }
 
-/* Анимации для уведомлений */
 @keyframes slideIn {
   from {
     transform: translateX(100%);
@@ -700,15 +495,6 @@ aside {
     width: 100%;
     position: static;
   }
-
-  .cart-panel {
-    width: 100%;
-    right: -100%;
-  }
-
-  .cart-open {
-    right: 0;
-  }
   .products-grid {
     flex-direction: column;
     margin: 20px;
@@ -717,20 +503,5 @@ aside {
     width: 50px;
     height: 50px;
   }
-}
-</style>
-
-<style>
-.cart-notification {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: #4CAF50;
-  color: white;
-  padding: 15px 20px;
-  border-radius: 8px;
-  z-index: 10000;
-  animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 </style>
